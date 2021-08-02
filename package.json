@@ -1,0 +1,22 @@
+{
+  "name": "message-pack",
+  "version": "1.0.0",
+  "description": "a ts/js message pack",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "run test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rezaf7326/message-pack.git"
+  },
+  "author": "rezaf7326",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/rezaf7326/message-pack/issues"
+  },
+  "homepage": "https://github.com/rezaf7326/message-pack#readme"
+}
