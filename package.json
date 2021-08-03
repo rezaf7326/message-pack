@@ -18,5 +18,11 @@
   "bugs": {
     "url": "https://github.com/rezaf7326/message-pack/issues"
   },
-  "homepage": "https://github.com/rezaf7326/message-pack#readme"
+  "homepage": "https://github.com/rezaf7326/message-pack#readme",
+  "devDependencies": {
+    "@types/debug": "^4.1.7"
+  },
+  "dependencies": {
+    "debug": "^4.3.2"
+  }
 }
