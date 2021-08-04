@@ -20,7 +20,9 @@
   },
   "homepage": "https://github.com/rezaf7326/message-pack#readme",
   "devDependencies": {
-    "@types/debug": "^4.1.7"
+    "@types/debug": "^4.1.7",
+    "@types/node": "^16.4.10",
+    "jest": "^27.0.6"
   },
   "dependencies": {
     "debug": "^4.3.2"

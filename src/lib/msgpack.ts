@@ -1,5 +1,5 @@
-import { DeserializedData, SerializedData } from "../utils/data-interface/message";
-import { TypeSystem, TypeSysCommands as commands } from "../utils/type-system";
+import { SupportedTypes } from "../utils/data-interface/types";
+import TypeSystem from "../utils/type-system";
 
 
 class MessagePack {
@@ -8,14 +8,12 @@ class MessagePack {
         this.typesystem = new TypeSystem();
     }
 
-    pack(message: any): SerializedData {
-        this.typesystem.handle(message, commands.pack);
-        return this.typesystem.output;
+    pack(message: SupportedTypes): Buffer {
+        return this.typesystem.serialize(message);
     }
 
-    unpack(packedMsg: SerializedData): DeserializedData {
-        this.typesystem.handle(packedMsg, commands.unpack);
-        return this.typesystem.output;
+    unpack(packedMsg: Buffer): SupportedTypes {
+        return this.typesystem.deserialize(packedMsg);
     }
 }
 

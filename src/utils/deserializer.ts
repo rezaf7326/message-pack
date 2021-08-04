@@ -1,14 +1,18 @@
-import { DeserializedData, SerializedData } from "./data-interface/message";
+import { SupportedTypes } from "./data-interface/types";
 
 class Deserializer {
+    private output: SupportedTypes;
 
-    deserialize(packedMsg: SerializedData): DeserializedData {
+    deserialize(packedMsg: Buffer): void {
         
-        let unpackedMsg: DeserializedData = {
+    }
 
-        }
+    get(): SupportedTypes {
+        return this.output;
+    }
 
-        return unpackedMsg;
+    private convertFormatToType(): void {
+        
     }
 }
 

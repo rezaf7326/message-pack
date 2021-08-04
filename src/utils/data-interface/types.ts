@@ -1,9 +1,10 @@
-interface Types {
+type SupportedTypes = Number | number | String | string | Boolean | boolean; // + null
 
+enum SerialTypeEnum {
+    "Number", "String", "Boolean", "Null"
 }
 
-const types: Types = {
-
-}
-
-export default types;
+export {
+    SupportedTypes,
+    SerialTypeEnum
+};
