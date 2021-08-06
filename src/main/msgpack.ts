@@ -1,6 +1,5 @@
 import { SupportedTypes } from "../utils/data-interface/types";
-import TypeSystem from "../utils/type-system";
-
+import TypeSystem from "./type-system";
 
 class MessagePack {
     private typesystem: TypeSystem;
@@ -17,5 +16,8 @@ class MessagePack {
     }
 }
 
+const msgpack = (function() { return new MessagePack() })();
 
-export default MessagePack;
+export {
+    msgpack
+}

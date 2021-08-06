@@ -1,5 +1,6 @@
 {
   "name": "message-pack",
+  "type": "module",
   "version": "1.0.0",
   "description": "a ts/js message pack",
   "main": "index.js",
@@ -7,7 +8,18 @@
     "test": "test"
   },
   "scripts": {
-    "test": "run test"
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
+  },
+  "jest": {
+    "preset": "ts-jest/presets/default-esm",
+    "testEnvironment": "jest-environment-node",
+    "extensionsToTreatAsEsm": [".ts"],
+    "transform": {},
+    "globals": {
+      "ts-jest": {
+        "useESM": true
+      }
+    }
   },
   "repository": {
     "type": "git",
@@ -21,10 +33,15 @@
   "homepage": "https://github.com/rezaf7326/message-pack#readme",
   "devDependencies": {
     "@types/debug": "^4.1.7",
+    "@types/jest": "^26.0.24",
     "@types/node": "^16.4.10",
-    "jest": "^27.0.6"
+    "jest": "^27.0.6",
+    "ts-jest": "^27.0.4",
+    "typescript": "^4.3.5"
   },
   "dependencies": {
+    "@babel/core": "^7.15.0",
+    "@babel/preset-env": "^7.15.0",
     "debug": "^4.3.2"
   }
 }
