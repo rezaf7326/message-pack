@@ -1,7 +1,7 @@
 {
     "compilerOptions": {
       "target": "es5",
-      "outDir": "./compiled-js/",
+      "outDir": "./compiled/src-js/",
       "baseUrl": "./",
       "incremental": true
     },

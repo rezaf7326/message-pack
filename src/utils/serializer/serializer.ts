@@ -1,14 +1,17 @@
-import Formats from "../data-interface/formats";
-import { TypesEnum } from "../data-interface/types";
-import { formatedNumberBufferCreator, formatedStrBufferCreator } from "./buffer-creators";
-
+import { Formats } from "../data-interface/formats";
+import { TypesEnum, SupportedTypes } from "../data-interface/types";
+import { 
+    formatedArrayBufferCreator, 
+    formatedNumberBufferCreator, 
+    formatedStrBufferCreator 
+} from "./buffer-creators";
 
 
 class Serializer {
     private output: Buffer;
 
-    serialize(data: any, type: TypesEnum): void {
-        switch(type) {
+    serialize(data: any): void {
+        switch(this.getType(data)) {
             case TypesEnum.String:
                 this.serializeString(data);
                 break;
@@ -21,8 +24,8 @@ class Serializer {
             case TypesEnum.Number:
                 this.serializeNumber(data);
                 break;
-            default:
-                Serializer.implementationMissingExcpt(type); 
+            case TypesEnum.Array:
+                this.serializeArray(data);
         }
     }
     
@@ -66,14 +69,39 @@ class Serializer {
     }
 
 
-    private serializeArray(arr: Array<any>): void {
+    private serializeArray(array: any[]): void {
+        let buffCreator = formatedArrayBufferCreator(array);
 
+        this.set(buffCreator.create());
+    }
+
+
+    private getType(obj: SupportedTypes) : TypesEnum {
+        if(this.isNumber(obj)) return TypesEnum.Number;
+        if(this.isString(obj)) return TypesEnum.String;
+        if(this.isBoolean(obj)) return TypesEnum.Boolean;
+        if(obj === null) return TypesEnum.Null;
+        if(Array.isArray(obj)) return TypesEnum.Array;
+
+        Serializer.unSuppotedTypeExcpt(obj);
+    }
+
+    private isNumber(value: SupportedTypes): boolean {
+        return (typeof value === "object" ? value instanceof Number : typeof value === "number");
+    }
+    
+    private isString(value: SupportedTypes): boolean {
+        return (typeof value === "object" ? value instanceof String : typeof value === "string");
+    }
+    
+    private isBoolean(value: SupportedTypes): boolean {
+        return (typeof value === "object" ? value instanceof Boolean : typeof value === "boolean");
     }
 
 
 
-    static implementationMissingExcpt(type: never) {
-        throw new Error(`serialization case for type ${type} is not implemented.`);
+    static unSuppotedTypeExcpt(obj: any) {
+        throw new Error(`the type of the value of this object is not supported. object ${obj}`)
     }
 
     static stringSizeOutOfRange(size: number) {
@@ -92,6 +120,10 @@ class Serializer {
 
     static invalidNumberExcpt(num: number) {
         throw new Error(`number ${num} is not valid. a NaN or an Infinity value is not allowed`);
+    }
+
+    static arrayLengthOutOfRange(arrayLength: number) {
+        throw new Error(`array length ${arrayLength} is out of range`);
     }
 }
 

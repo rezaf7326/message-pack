@@ -1,6 +1,7 @@
 enum Formats {
     positive_fixint = 0x00, // 0x00 to 0x7f
     fixmap = 0x80, // 0x80 to 0x8f
+    fixarray = 0x90, // 0x90 - 0x9f
     nil	= 0xc0,
     // (never used)	= 0xc1,
     bool_false = 0xc2,
@@ -37,4 +38,36 @@ enum Formats {
     negative_fixint = 0xe0, // 0xe0 to 0xff
 }
 
-export default Formats;
+
+function isFixedStr(format: Formats): boolean {
+    return isIn(format, 0xa0, 0xbf);
+}
+
+function isPosFixedInt(format: Formats): boolean {
+    return isIn(format, 0x00, 0x7f);
+}
+
+function isNegFixedInt(format: Formats): boolean {
+    return isIn(format, 0xe0, 0xff);
+}
+
+function isFixedArray(format: Formats): boolean {
+    return isIn(format, 0x90, 0x9f);
+}
+
+function isFixedMap(format: Formats): boolean {
+    return isIn(format, 0x80, 0x8f);
+}
+
+function isIn(format: Formats, min: number, max: number): boolean {
+    return 0x90 <= format && format <= 0x9f;
+}
+
+
+export {
+    Formats,
+    isFixedStr,
+    isPosFixedInt,
+    isNegFixedInt,
+    isFixedArray
+};

@@ -29,8 +29,10 @@ var bigNum = 2 ** 150;
 
 // console.log('is float', 3, !!(3 % 1))
 // console.log('is float', 3.1, !!(3.1 % 1))
-console.log(Infinity instanceof Number)
-console.log((-0) < (0))
+// console.log(Infinity instanceof Number)
+// console.log((-0) < (0))
+
+
 
 // console.log(isFinite(NaN))
 
@@ -41,4 +43,40 @@ console.log((-0) < (0))
 // const b = Buffer.from([-31])
 
 // console.log(b.readInt8(0));
+
+
+
+function A() {
+    let m = 'org';
+
+    function c() {
+        console.log('in c', m);
+    }
+    function b() {
+        c();
+        let a = new A();
+        a.c();
+        a.setM('new message');
+        a.c();
+        c();
+    }
+    function setM(message) {
+        m = message;
+    }
+
+    return {
+        b: b,
+        c: c,
+        setM: setM
+    }
+}
+
+
+let buff = Buffer.allocUnsafe(2);
+let format = Buffer.allocUnsafe(1);
+
+format.writeUInt8(2);
+buff.writeUInt16BE(260);
+
+console.log(Buffer.concat([format, buff]))
 

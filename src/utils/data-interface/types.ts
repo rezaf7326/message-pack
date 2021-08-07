@@ -1,11 +1,11 @@
-import Formats from "./formats";
+import { Formats } from "./formats";
 const { 
     fixstr, str_8, str_16, str_32,
     bool_false, bool_true,
     positive_fixint, negative_fixint, uint_8, uint_16, uint_32, uint_64,
     int_8, int_16, int_32, int_64, float_32, float_64, 
     nil,
-    array_16, array_32,
+    array_16, array_32, fixarray,
     fixmap, map_16, map_32,
 } = Formats;
 
@@ -13,7 +13,7 @@ const {
 const type_str_formats = [ fixstr, str_8, str_16, str_32 ];
 const type_bool_formats = [ bool_false, bool_true ];
 const type_null_formats = [ nil ];
-const type_array_formats = [ array_16, array_32 ]; // todo:
+const type_array_formats = [ array_16, array_32, fixarray ];
 const type_map_formats = [ fixmap, map_16, map_32 ]; // todo:
 const type_number_formats = [
     positive_fixint, negative_fixint, uint_8, uint_16, uint_32, uint_64,
@@ -21,9 +21,9 @@ const type_number_formats = [
 ];
 
 
-type SupportedTypes = Number | number | String | string | Boolean | boolean; // + null
+type SupportedTypes = Number | number | String | string | Boolean | boolean | any [] ; // + null
 enum TypesEnum {
-    "Number", "String", "Boolean", "Null"
+    "Number", "String", "Boolean", "Null", "Array"
 }
 
 
@@ -34,4 +34,5 @@ export {
     type_bool_formats,
     type_null_formats,
     type_number_formats,
+    type_array_formats
 };

@@ -1,4 +1,6 @@
-import Formats from "../data-interface/formats";
+import { 
+    Formats, isFixedArray, isFixedStr, isNegFixedInt 
+} from "../data-interface/formats";
 import Serializer from "./serializer";
 
 type BufferCreator = { create: () => Buffer };
@@ -36,17 +38,36 @@ function getStrFormatFamily(byteLength: number): { format: Formats } {
 function formatedStrBufferCreator(str: string): BufferCreator {
     // here I'm assuming utf8-encoding and 1-byte per character
     // an alternative to Buffer.byteLength(str, 'utf8')
-    let formatFamily = getStrFormatFamily(str.length);
+    let { format } = getStrFormatFamily(str.length);
+    let nChars: Buffer;
+
+    switch(format) {
+        case Formats.fixstr:
+            format = format + str.length;
+            break;
+        case Formats.str_8:
+            nChars = Buffer.allocUnsafe(1);
+            nChars.writeUInt8(str.length);
+            break;
+        case Formats.str_16:
+            nChars = Buffer.allocUnsafe(2);
+            nChars.writeUInt16BE(str.length);
+            break;
+        case Formats.str_32:
+            nChars = Buffer.allocUnsafe(4);
+            nChars.writeUInt32BE(str.length);
+    }
 
     const creator = {
         create: function(): Buffer {
             // an extra byte for the format
-            let buff = Buffer.allocUnsafe(str.length + 1);
             const strBuf = Buffer.from(str, 'utf8');
-            buff[0] = formatFamily.format;
-            strBuf.copy(buff, 1);
+            const formatBuf = Buffer.allocUnsafe(1);
+            formatBuf.writeUInt8(format);
             
-            return buff;
+            return isFixedStr(format) ?
+                Buffer.concat([formatBuf, strBuf]) :
+                Buffer.concat([formatBuf, nChars, strBuf]);
         }
     };
 
@@ -60,7 +81,7 @@ function formatedStrBufferCreator(str: string): BufferCreator {
 function getNumberFormatFamily(num: number): { format: Formats, bytes: number, isSigned?: boolean, isFloat?: boolean } {
     if(!isValid()) Serializer.invalidNumberExcpt(num);
     if(isPositiveFix()) return { format: Formats.positive_fixint, bytes: 1 };
-    if(isNegativeFix()) return { format: Formats.negative_fixint, bytes: 1 , isSigned: true };
+    if(isNegativeFix()) return { format: Formats.negative_fixint, bytes: 1 };
     if(is8bitUint()) return { format: Formats.uint_8, bytes: 2 };
     if(is8bitInt()) return { format: Formats.int_8, bytes: 2 , isSigned: true };
     if(is16bitUint()) return { format: Formats.uint_16, bytes: 3 };
@@ -139,7 +160,7 @@ function formatedNumberBufferCreator(num: number): BufferCreator {
 
     switch(bytes) {
         case 1: 
-             isSigned ? buff.writeInt8(num) : buff.writeUInt8(num);
+            isNegFixedInt(format) ? buff.writeInt8(num) : buff.writeUInt8(num);
             break;
         case 2:
             isSigned ? buff.writeInt8(num, 1) : buff.writeUInt8(num, 1);
@@ -149,8 +170,8 @@ function formatedNumberBufferCreator(num: number): BufferCreator {
             break;
         case 5:
             isFloat ? buff.writeFloatBE(num, 1) :
-                isSigned ? buff.writeIntBE(num, 1, bytes) : 
-                    buff.writeUIntBE(num, 1, bytes);
+                isSigned ? buff.writeInt32BE(num, 1) : 
+                    buff.writeUInt32BE(num, 1);
             break;
         case 9:
             let bigInt = BigInt(num);
@@ -172,7 +193,69 @@ function formatedNumberBufferCreator(num: number): BufferCreator {
 
 
 
+function getArrayFormatFamily(arrLength: number): { format: Formats } {
+    if(isFixArray()) return { format: Formats.fixarray };
+    if(is16Array()) return { format: Formats.array_16 };
+    if(is32Array()) return { format: Formats.array_32 };
+    Serializer.arrayLengthOutOfRange(arrLength);
+
+    function isFixArray(): boolean {
+        return arrLength < 16;
+    }
+    function is16Array(): boolean {
+        return arrLength < Math.pow(2, 16);
+    }
+    function is32Array(): boolean {
+        return arrLength < Math.pow(2, 32);
+    }
+}
+
+
+function formatedArrayBufferCreator(array: any[]): BufferCreator {
+    let { format } = getArrayFormatFamily(array.length);
+    let numOfElements: Buffer;
+
+    switch(format) {
+        case Formats.fixarray:
+            format = format + array.length;
+            break;
+        case Formats.array_16:
+            numOfElements = Buffer.allocUnsafe(2);
+            numOfElements.writeUInt16BE(array.length);
+            break;    
+        case Formats.array_32:        
+            numOfElements = Buffer.allocUnsafe(4);
+            numOfElements.writeUInt32BE(array.length);
+    }
+
+
+    const creator = {
+        create: function (): Buffer {
+            let buffFormat = Buffer.allocUnsafe(1);
+            buffFormat.writeUInt8(format);
+            
+            let buffers: Buffer[] = [];
+            buffers.push(buffFormat);
+            if(!isFixedArray(format)) buffers.push(numOfElements);
+
+            for(let element of array) {
+                let serializer = new Serializer();
+                serializer.serialize(element);
+                buffers.push(serializer.get());
+            }
+
+            return Buffer.concat(buffers);
+        }
+    }
+
+    return creator;
+}
+
+
+
+
 export {
     formatedStrBufferCreator,
-    formatedNumberBufferCreator
+    formatedNumberBufferCreator,
+    formatedArrayBufferCreator
 }
