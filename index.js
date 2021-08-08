@@ -1,3 +1,5 @@
+import { msgpack } from './src/main/msgpack';
+
 // let buf = Buffer.from('sasd');
 // console.log(buf.toString('utf8'))
 
@@ -12,7 +14,7 @@
 // console.log((3.234) % 1 === 0)
 // console.log((3) % 1)
 
-var bigNum = 2 ** 150;
+// var bigNum = 2 ** 150;
 // console.log(Math.fround(bigNum * -1).toString())
 // console.log(Math.fround(bigNum).toString().includes('Infinity'))
 
@@ -46,37 +48,40 @@ var bigNum = 2 ** 150;
 
 
 
-function A() {
-    let m = 'org';
+// function A() {
+//     let m = 'org';
 
-    function c() {
-        console.log('in c', m);
-    }
-    function b() {
-        c();
-        let a = new A();
-        a.c();
-        a.setM('new message');
-        a.c();
-        c();
-    }
-    function setM(message) {
-        m = message;
-    }
+//     function c() {
+//         console.log('in c', m);
+//     }
+//     function b() {
+//         c();
+//         let a = new A();
+//         a.c();
+//         a.setM('new message');
+//         a.c();
+//         c();
+//     }
+//     function setM(message) {
+//         m = message;
+//     }
 
-    return {
-        b: b,
-        c: c,
-        setM: setM
-    }
-}
+//     return {
+//         b: b,
+//         c: c,
+//         setM: setM
+//     }
+// }
 
 
-let buff = Buffer.allocUnsafe(2);
-let format = Buffer.allocUnsafe(1);
+// let buff = Buffer.allocUnsafe(2);
+// let format = Buffer.allocUnsafe(1);
 
-format.writeUInt8(2);
-buff.writeUInt16BE(260);
+// format.writeUInt8(2);
+// buff.writeUInt16BE(260);
 
-console.log(Buffer.concat([format, buff]))
+// console.log(Buffer.concat([format, buff]))
 
+// let packedFixInt = msgpack.pack(18); // 00010010 (7-bit: 0xxxxxxx)
+// console.log(packedFixInt);
+// console.log('desers to:', msgpack.unpack(packedFixInt));

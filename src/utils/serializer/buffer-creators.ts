@@ -1,5 +1,5 @@
 import { 
-    Formats, isFixedArray, isFixedStr, isNegFixedInt 
+    Formats, isFixedArray, isFixedStr, isNegFixedInt, isPosFixedInt 
 } from "../data-interface/formats";
 import Serializer from "./serializer";
 
@@ -78,10 +78,12 @@ function formatedStrBufferCreator(str: string): BufferCreator {
 
 
 
-function getNumberFormatFamily(num: number): { format: Formats, bytes: number, isSigned?: boolean, isFloat?: boolean } {
+function getNumberFormatFamily(num: number): { format: Formats, bytes: number, 
+        isSigned?: boolean, isFloat?: boolean } {
+
     if(!isValid()) Serializer.invalidNumberExcpt(num);
-    if(isPositiveFix()) return { format: Formats.positive_fixint, bytes: 1 };
-    if(isNegativeFix()) return { format: Formats.negative_fixint, bytes: 1 };
+    if(isFixPos()) return { format: Formats.positive_fixint, bytes: 1 };
+    if(isFixNeg()) return { format: Formats.negative_fixint, bytes: 1 };
     if(is8bitUint()) return { format: Formats.uint_8, bytes: 2 };
     if(is8bitInt()) return { format: Formats.int_8, bytes: 2 , isSigned: true };
     if(is16bitUint()) return { format: Formats.uint_16, bytes: 3 };
@@ -95,17 +97,17 @@ function getNumberFormatFamily(num: number): { format: Formats, bytes: number, i
     Serializer.unSupportedNumberExcpt(num);
 
 
-    function isPositiveFix(): boolean {
-        return !isNegative() && bitLength() < 8; // -1 < num < 128;
+    function isFixPos(): boolean {
+        return !isFloat() && isPosFixedInt(num);
     }
-    function isNegativeFix(): boolean {
-        return isNegative() && bitLength() < 6; // -32 < num < 0
+    function isFixNeg(): boolean {
+        return !isFloat() && isNegFixedInt(num);
     }
     function is8bitUint(): boolean {
-        return !isNegative() && bitLength() === 8;
+        return !isNegative() && bitLength() <= 8;
     }
     function is8bitInt(): boolean {
-        return isNegative() && bitLength() === 8;
+        return isNegative() && bitLength() <= 8;
     }
     function is16bitUint(): boolean {
         return !isNegative() && isBitLengthIn(9, 16);
@@ -123,7 +125,7 @@ function getNumberFormatFamily(num: number): { format: Formats, bytes: number, i
         return isNegative() && isBitLengthIn(17, 32);
     }
     function isFloat64(): boolean {
-        return isFloat() && !isFinite(Math.fround(num));
+        return isFloat() && !isFloat32();
     }
     function is64bitUint(): boolean {
         return !isNegative() && 32 < bitLength();
@@ -159,7 +161,7 @@ function formatedNumberBufferCreator(num: number): BufferCreator {
     if(bytes > 1) buff[0] = format;
 
     switch(bytes) {
-        case 1: 
+        case 1:
             isNegFixedInt(format) ? buff.writeInt8(num) : buff.writeUInt8(num);
             break;
         case 2:

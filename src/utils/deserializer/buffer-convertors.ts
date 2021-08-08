@@ -1,7 +1,11 @@
-import { Formats } from "../data-interface/formats";
+import { 
+    Formats, isFixedArray, isFixedStr, isNegFixedInt, isPosFixedInt 
+} from "../data-interface/formats";
+import { type_array_formats } from "../data-interface/types";
+import Deserializer from './deserializer';
 
 
-type Convertor = { convert: (buff: Buffer) => any, byteLength: number };
+type Convertor = { convert: (buff: Buffer) => any | any[], byteLength?: number };
 
 
 const numberConvertor = new Map();
@@ -168,19 +172,89 @@ stringConvertor.set(Formats.str_32, (function() {
 
 
 
+function getNextElementLength(buff: Buffer): number {
+    const dataLength = {
+        [Formats.nil]: 1,
+        [Formats.bool_true]: 1,
+        [Formats.bool_false]: 1,
+        [Formats.positive_fixint]: 1,
+        [Formats.negative_fixint]: 1,
+        [Formats.uint_8]: 2,
+        [Formats.int_8]: 2,
+        [Formats.uint_16]: 3,
+        [Formats.int_16]: 3,
+        [Formats.uint_32]: 5,
+        [Formats.int_32]: 5,
+        [Formats.float_32]: 5,
+        [Formats.uint_64]: 9,
+        [Formats.int_64]: 9,
+        [Formats.float_64]: 9,
+        [Formats.fixstr]: buff[0] - Formats.fixstr + 1,
+        [Formats.str_8]: (() => {
+            if(buff.length > 1) return buff.readUInt8(1) + 1;
+        })(),
+        [Formats.str_16]: (function() {
+            if(buff.length > 2) return buff.readUInt16BE(1) + 1;
+        })(),
+        [Formats.str_32]: (function() {
+            if(buff.length > 4) return buff.readUInt32BE(1) + 1;
+        })(),
+
+        // array-of-maps & array-of-arrays are not supported yet
+        // [Formats.fixarray]: ,
+        // [Formats.array_16]: ,
+        // [Formats.array_32]: ,
+        // [Formats.fixmap]: ,
+        // [Formats.map_32]: ,
+        // [Formats.map_16]: ,
+    }
+
+    function getFormat(): Formats {
+        if(isPosFixedInt(buff[0])) return Formats.positive_fixint;
+        if(isNegFixedInt(buff[0])) return Formats.negative_fixint;
+        if(isFixedStr(buff[0])) return Formats.fixstr;
+        // if(isFixedArray(buff[0])) return Formats.fixarray;
+    
+        return buff[0];
+    }
+    
+    return dataLength[getFormat()];
+}
+
+
 arrayConvertor.set(Formats.fixarray, {
         convert: function(buff: Buffer) {
-            const numbOfElements = buff.readUInt8(1);
-            const dataLength = buff.length - 2; // starts at index 2
+            let nOfElements = buff[0] - Formats.fixarray;
+            let elements = [];
+            let start = 1;
+            
+            while(nOfElements-- > 0) {
+                let deserializer = new Deserializer();
+                let next = start + getNextElementLength(buff.subarray(start));;
+                let element = buff.subarray(start, next);
+                
+                deserializer.deserialize(element);
+                elements.push(deserializer.get());
+                start = next + 1;
+            }
 
+            return elements;
         },
-        byteLength: 0
     }
 );
 
 arrayConvertor.set(Formats.array_16, {
         convert: function(buff: Buffer) {
+            let elements = [];
+            let start = 3;
+            let nOfElements = buff[0] - Formats.fixarray;
+            let nextLength = getNextElementLength(buff.subarray(start));
             
+
+            while(nOfElements-- !== 0) {
+                let deserialzier = new Deserializer();
+                let element = buff.subarray()
+            }
         },
         byteLength: 0
     }
@@ -188,7 +262,16 @@ arrayConvertor.set(Formats.array_16, {
 
 arrayConvertor.set(Formats.array_32, {
         convert: function(buff: Buffer) {
+            let elements = [];
+            let start = 5;
+            let nOfElements = buff[0] - Formats.fixarray;
+            let nextLength = getNextElementLength(buff.subarray(start));
             
+
+            while(nOfElements-- !== 0) {
+                let deserialzier = new Deserializer();
+                let element = buff.subarray()
+            }
         },
         byteLength: 0
     }

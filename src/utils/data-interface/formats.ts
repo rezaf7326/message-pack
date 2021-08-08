@@ -60,7 +60,7 @@ function isFixedMap(format: Formats): boolean {
 }
 
 function isIn(format: Formats, min: number, max: number): boolean {
-    return 0x90 <= format && format <= 0x9f;
+    return min <= format && format <= max;
 }
 
 

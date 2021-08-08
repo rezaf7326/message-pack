@@ -16,7 +16,7 @@ class MessagePack {
     }
 }
 
-const msgpack = (function() { return new MessagePack() })();
+const msgpack = new MessagePack();
 
 export {
     msgpack
