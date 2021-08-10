@@ -191,13 +191,13 @@ function getNextElementLength(buff: Buffer): number {
         [Formats.float_64]: 9,
         [Formats.fixstr]: buff[0] - Formats.fixstr + 1,
         [Formats.str_8]: (() => {
-            if(buff.length > 1) return buff.readUInt8(1) + 1;
+            if(buff.length > 1) return buff.readUInt8(1) + 2;
         })(),
         [Formats.str_16]: (function() {
-            if(buff.length > 2) return buff.readUInt16BE(1) + 1;
+            if(buff.length > 2) return buff.readUInt16BE(1) + 3;
         })(),
         [Formats.str_32]: (function() {
-            if(buff.length > 4) return buff.readUInt32BE(1) + 1;
+            if(buff.length > 4) return buff.readUInt32BE(1) + 5;
         })(),
 
         // array-of-maps & array-of-arrays are not supported yet
@@ -268,8 +268,6 @@ arrayConvertor.set(Formats.array_32, {
         },
     }
 );
-
-
 
 
 

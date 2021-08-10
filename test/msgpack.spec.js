@@ -67,7 +67,7 @@ describe('number packing/unpacking', () => {
         }
     });
 
-    it("packs & unpacks a float 32 and a float 64 and asserts on the results", () => {
+    it("packs & unpacks a float 32 and a float 64 and asserts the results", () => {
         let float32 = Math.fround(2.354);
         let float64 = 741123.1234624; //34624
         let packedF32 = msgpack.pack(float32);
@@ -80,7 +80,7 @@ describe('number packing/unpacking', () => {
 
 
 describe('array packing/unpacking', () => {
-    it.only("pack & unpacks a fix-array of integers then asserts on the results", () => {
+    it("pack & unpacks a fix-array of integers then asserts the results", () => {
         let fixarray = [12, 2, 3, 4, 1738, -3, -256];
         let unpackedArr = msgpack.unpack(msgpack.pack(fixarray));
         
@@ -88,11 +88,15 @@ describe('array packing/unpacking', () => {
             expect(unpackedArr).toContain(num);
     });
 
-    // it("pack & unpacks --- then asserts on the results", () => {
+    it.only("pack & unpacks an array of strings then asserts the results", () => {
+        let strArray = ["string-1", "string-2", "strin-3",
+            "message pack is fast serialization/deserialization tool for transfering data over a network..."];
+        let unpackedArr = msgpack.unpack(msgpack.pack(strArray));
+        for(let str of strArray)
+            expect(unpackedArr).toContain(str);
+    });
 
-    // });
-
-    // it("pack & unpacks --- then asserts on the results", () => {
+    // it("pack & unpacks --- then asserts the results", () => {
 
     // });
 });
