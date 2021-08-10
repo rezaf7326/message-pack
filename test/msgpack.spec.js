@@ -80,11 +80,10 @@ describe('number packing/unpacking', () => {
 
 
 describe('array packing/unpacking', () => {
-    it("pack & unpacks a fix-array of integers then asserts on the results", () => {
-        let fixarray = [12, 2, 3, 4, 1738];
+    it.only("pack & unpacks a fix-array of integers then asserts on the results", () => {
+        let fixarray = [12, 2, 3, 4, 1738, -3, -256];
         let unpackedArr = msgpack.unpack(msgpack.pack(fixarray));
         
-        console.log(unpackedArr); // todo: remove
         for(let num of fixarray) 
             expect(unpackedArr).toContain(num);
     });
