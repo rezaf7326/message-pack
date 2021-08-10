@@ -222,58 +222,50 @@ function getNextElementLength(buff: Buffer): number {
 }
 
 
+function extractArray(buff: Buffer, nOfElements: number, offset: number = 1): any [] {
+    let elements = [];
+    let start = offset;
+    while(nOfElements-- > 0) {
+        let deserializer = new Deserializer();
+        let next = start + getNextElementLength(buff.subarray(start));;
+        let element = buff.subarray(start, next);
+        
+        deserializer.deserialize(element);
+        elements.push(deserializer.get());
+        start = next;
+    }
+
+    return elements;
+}
+
+
 arrayConvertor.set(Formats.fixarray, {
         convert: function(buff: Buffer) {
             let nOfElements = buff[0] - Formats.fixarray;
-            let elements = [];
-            let start = 1;
+            let start = 1; // the first byte of the 'data'
             
-            while(nOfElements-- > 0) {
-                let deserializer = new Deserializer();
-                let next = start + getNextElementLength(buff.subarray(start));;
-                let element = buff.subarray(start, next);
-                
-                deserializer.deserialize(element);
-                elements.push(deserializer.get());
-                start = next + 1;
-            }
-
-            return elements;
+            return extractArray(buff, nOfElements, start);
         },
     }
 );
 
 arrayConvertor.set(Formats.array_16, {
         convert: function(buff: Buffer) {
-            let elements = [];
-            let start = 3;
-            let nOfElements = buff[0] - Formats.fixarray;
-            let nextLength = getNextElementLength(buff.subarray(start));
+            let nOfElements = buff.readUInt16BE(1);
+            let start = 3; // the first byte of the 'data'
             
-
-            while(nOfElements-- !== 0) {
-                let deserialzier = new Deserializer();
-                let element = buff.subarray()
-            }
+            return extractArray(buff, nOfElements, start);
         },
-        byteLength: 0
     }
 );
 
 arrayConvertor.set(Formats.array_32, {
         convert: function(buff: Buffer) {
-            let elements = [];
-            let start = 5;
-            let nOfElements = buff[0] - Formats.fixarray;
-            let nextLength = getNextElementLength(buff.subarray(start));
+            let nOfElements = buff.readUInt32BE(1);;
+            let start = 5; // the first byte of the 'data'
             
-
-            while(nOfElements-- !== 0) {
-                let deserialzier = new Deserializer();
-                let element = buff.subarray()
-            }
+            return extractArray(buff, nOfElements, start);
         },
-        byteLength: 0
     }
 );
 
