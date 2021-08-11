@@ -2,6 +2,7 @@ import { Formats } from "../data-interface/formats";
 import { TypesEnum, SupportedTypes } from "../data-interface/types";
 import { 
     formatedArrayBufferCreator, 
+    formatedMapBufferCreator, 
     formatedNumberBufferCreator, 
     formatedStrBufferCreator 
 } from "./buffer-creators";
@@ -26,6 +27,9 @@ class Serializer {
                 break;
             case TypesEnum.Array:
                 this.serializeArray(data);
+                break;
+            case TypesEnum.Map:
+                this.serializeMap(data);
         }
     }
     
@@ -37,13 +41,6 @@ class Serializer {
         this.output = output;
     }
 
-
-
-    private serializeString(str: string): void {
-        let buffCreator = formatedStrBufferCreator(str);
-
-        this.set(buffCreator.create());
-    }
 
 
     private serializeBool(bool: boolean): void {
@@ -62,26 +59,34 @@ class Serializer {
     }
 
 
-    private serializeNumber(num: number): void {
-        let buffCreator = formatedNumberBufferCreator(num);
+    private serializeString(str: string): void {
+        this.set(formatedStrBufferCreator(str).create());
+    }
 
-        this.set(buffCreator.create());
+
+    private serializeNumber(num: number): void {
+        this.set(formatedNumberBufferCreator(num).create());
     }
 
 
     private serializeArray(array: any[]): void {
-        let buffCreator = formatedArrayBufferCreator(array);
-
-        this.set(buffCreator.create());
+        this.set(formatedArrayBufferCreator(array).create());
     }
+
+
+    private serializeMap(map: Map<any, any>): void {
+        this.set(formatedMapBufferCreator(map).create());
+    }
+
 
 
     private getType(obj: SupportedTypes) : TypesEnum {
         if(this.isNumber(obj)) return TypesEnum.Number;
         if(this.isString(obj)) return TypesEnum.String;
         if(this.isBoolean(obj)) return TypesEnum.Boolean;
-        if(obj === null) return TypesEnum.Null;
-        if(Array.isArray(obj)) return TypesEnum.Array;
+        if(this.isNull(obj)) return TypesEnum.Null;
+        if(this.isArray(obj)) return TypesEnum.Array;
+        if(this.isMap(obj)) return TypesEnum.Map;
 
         Serializer.unSuppotedTypeExcpt(obj);
     }
@@ -97,6 +102,12 @@ class Serializer {
     private isBoolean(value: SupportedTypes): boolean {
         return (typeof value === "object" ? value instanceof Boolean : typeof value === "boolean");
     }
+
+    private isNull(value: SupportedTypes): boolean { return value === null; }
+
+    private isArray(value: SupportedTypes): boolean { return Array.isArray(value); }
+
+    private isMap(value: SupportedTypes): boolean { return value instanceof Map; }
 
 
 
@@ -123,7 +134,11 @@ class Serializer {
     }
 
     static arrayLengthOutOfRange(arrayLength: number) {
-        throw new Error(`array length ${arrayLength} is out of range`);
+        throw new Error(`array length ${arrayLength} is out of range. max-length: (2^32)-1 elements`);
+    }
+
+    static mapSizeOutOfRange(mapSize: number) {
+        throw new Error(`map size ${mapSize} is out of range. max-size: (2^32)-1 elements`);
     }
 }
 

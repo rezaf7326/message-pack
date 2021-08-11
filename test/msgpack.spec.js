@@ -88,7 +88,7 @@ describe('array packing/unpacking', () => {
             expect(unpackedArr).toContain(num);
     });
 
-    it.only("pack & unpacks an array of strings then asserts the results", () => {
+    it("pack & unpacks an array of strings then asserts the results", () => {
         let strArray = ["string-1", "string-2", "strin-3",
             "message pack is fast serialization/deserialization tool for transfering data over a network..."];
         let unpackedArr = msgpack.unpack(msgpack.pack(strArray));
@@ -97,6 +97,5 @@ describe('array packing/unpacking', () => {
     });
 
     // it("pack & unpacks --- then asserts the results", () => {
-
     // });
 });

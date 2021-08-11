@@ -22,11 +22,10 @@ const type_number_formats = [
 ];
 
 
-type SupportedTypes = Number | number | String | string | Boolean | boolean | any [] ; // + null
+type SupportedTypes = Number | number | String | string | Boolean | boolean | any [] | Map<any, any> ; // + null
 enum TypesEnum {
-    "Number", "String", "Boolean", "Null", "Array"
+    "Number", "String", "Boolean", "Null", "Array", "Map"
 }
-
 
 export {
     SupportedTypes,

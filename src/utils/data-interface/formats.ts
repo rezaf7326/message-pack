@@ -69,5 +69,6 @@ export {
     isFixedStr,
     isPosFixedInt,
     isNegFixedInt,
-    isFixedArray
+    isFixedArray,
+    isFixedMap
 };

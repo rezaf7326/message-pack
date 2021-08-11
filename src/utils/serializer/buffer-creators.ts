@@ -1,5 +1,5 @@
 import { 
-    Formats, isFixedArray, isFixedStr, isNegFixedInt, isPosFixedInt 
+    Formats, isFixedArray, isFixedMap, isFixedStr, isNegFixedInt, isPosFixedInt 
 } from "../data-interface/formats";
 import Serializer from "./serializer";
 
@@ -13,24 +13,34 @@ const str16_bytes_limit: number = Math.pow(2, 16);
 const str32_bytes_limit: number = Math.pow(2, 32);
 
 
-function getStrFormatFamily(byteLength: number): { format: Formats } {
-    if(isFixStr()) return { format: Formats.fixstr };
+function formatBuffer(format: Formats) {
+    let formatBuff = Buffer.allocUnsafe(1);
+    formatBuff.writeUInt8(format);
+
+    return formatBuff;
+}
+
+
+
+
+function getStrFormatFamily(strLength: number): { format: Formats } {
+    if(isFixStr()) return { format: Formats.fixstr + strLength };
     if(isStr8()) return { format: Formats.str_8 };
     if(isStr16()) return { format: Formats.str_16 };
     if(isStr32()) return { format: Formats.str_32 };
-    Serializer.stringSizeOutOfRange(byteLength);
+    Serializer.stringSizeOutOfRange(strLength);
 
     function isFixStr(): boolean {
-        return byteLength < fixstr_bytes_limit;
+        return strLength < fixstr_bytes_limit;
     }
     function isStr8(): boolean {
-        return byteLength < str8_bytes_limit;
+        return strLength < str8_bytes_limit;
     }
     function isStr16(): boolean {
-        return byteLength < str16_bytes_limit;
+        return strLength < str16_bytes_limit;
     }
     function isStr32(): boolean {
-        return byteLength < str32_bytes_limit;
+        return strLength < str32_bytes_limit;
     }
 }
 
@@ -42,9 +52,6 @@ function formatedStrBufferCreator(str: string): BufferCreator {
     let nChars: Buffer;
 
     switch(format) {
-        case Formats.fixstr:
-            format = format + str.length;
-            break;
         case Formats.str_8:
             nChars = Buffer.allocUnsafe(1);
             nChars.writeUInt8(str.length);
@@ -62,12 +69,10 @@ function formatedStrBufferCreator(str: string): BufferCreator {
         create: function(): Buffer {
             // an extra byte for the format
             const strBuf = Buffer.from(str, 'utf8');
-            const formatBuf = Buffer.allocUnsafe(1);
-            formatBuf.writeUInt8(format);
             
             return isFixedStr(format) ?
-                Buffer.concat([formatBuf, strBuf]) :
-                Buffer.concat([formatBuf, nChars, strBuf]);
+                Buffer.concat([formatBuffer(format), strBuf]) :
+                Buffer.concat([formatBuffer(format), nChars, strBuf]);
         }
     };
 
@@ -195,10 +200,10 @@ function formatedNumberBufferCreator(num: number): BufferCreator {
 
 
 
-function getArrayFormatFamily(arrLength: number): { format: Formats } {
-    if(isFixArray()) return { format: Formats.fixarray };
-    if(is16Array()) return { format: Formats.array_16 };
-    if(is32Array()) return { format: Formats.array_32 };
+function getArrayFormatFamily(arrLength: number): { format: Formats, nByteLength: number } {
+    if(isFixArray()) return { format: Formats.fixarray + arrLength, nByteLength: 0 };
+    if(is16Array()) return { format: Formats.array_16, nByteLength: 2 };
+    if(is32Array()) return { format: Formats.array_32, nByteLength: 4 };
     Serializer.arrayLengthOutOfRange(arrLength);
 
     function isFixArray(): boolean {
@@ -214,31 +219,14 @@ function getArrayFormatFamily(arrLength: number): { format: Formats } {
 
 
 function formatedArrayBufferCreator(array: any[]): BufferCreator {
-    let { format } = getArrayFormatFamily(array.length);
-    let numOfElements: Buffer;
-
-    switch(format) {
-        case Formats.fixarray:
-            format = format + array.length;
-            break;
-        case Formats.array_16:
-            numOfElements = Buffer.allocUnsafe(2);
-            numOfElements.writeUInt16BE(array.length);
-            break;    
-        case Formats.array_32:        
-            numOfElements = Buffer.allocUnsafe(4);
-            numOfElements.writeUInt32BE(array.length);
-    }
-
-
     const creator = {
         create: function (): Buffer {
-            let buffFormat = Buffer.allocUnsafe(1);
-            buffFormat.writeUInt8(format);
-            
             let buffers: Buffer[] = [];
-            buffers.push(buffFormat);
-            if(!isFixedArray(format)) buffers.push(numOfElements);
+            let { format, nByteLength: nBytes } = getArrayFormatFamily(array.length);
+            
+            buffers.push(formatBuffer(format));
+            if(!isFixedArray(format)) 
+                buffers.push(nOfElementsBuffer(format, nBytes));
 
             for(let element of array) {
                 let serializer = new Serializer();
@@ -251,13 +239,88 @@ function formatedArrayBufferCreator(array: any[]): BufferCreator {
     }
 
     return creator;
+
+
+    function nOfElementsBuffer(format: Formats, numByteLength: number): Buffer {
+        let nOfElements = Buffer.allocUnsafe(numByteLength);
+        
+        if(format === Formats.array_16)
+            nOfElements.writeUInt16BE(array.length);
+        else
+            if(format === Formats.array_32)
+                nOfElements.writeUInt32BE(array.length);
+
+        return nOfElements;
+    }
 }
 
+
+
+
+function getMapFormatFamily(mapSize: number): { format: Formats, sizeByteLength: number } {
+    if(isFixMap()) return { format: Formats.fixmap + mapSize, sizeByteLength: 0 };
+    if(is16Map()) return { format: Formats.map_16, sizeByteLength: 2 };
+    if(is32Map()) return { format: Formats.map_32, sizeByteLength: 4 };
+    Serializer.mapSizeOutOfRange(mapSize);
+
+    function isFixMap(): boolean {
+        return mapSize < 16;
+    }
+    function is16Map(): boolean {
+        return mapSize < Math.pow(2, 16);
+    }
+    function is32Map(): boolean {
+        return mapSize < Math.pow(2, 32);
+    }
+}
+
+
+function formatedMapBufferCreator(map: Map<any, any>): BufferCreator {
+    const creator = {
+        create: function() {
+            let buffers: Buffer[] = [];
+            let { format, sizeByteLength } = getMapFormatFamily(map.size);
+            
+            buffers.push(formatBuffer(format));
+            if(!isFixedMap(format))
+                buffers.push(numOfPairsBuffer(format, sizeByteLength));
+
+            for(let [key, value] of map) {
+                let keySerializer = new Serializer();
+                let valSerializer = new Serializer();
+
+                keySerializer.serialize(key);
+                valSerializer.serialize(value);
+
+                buffers.push(keySerializer.get());
+                buffers.push(valSerializer.get());
+            }
+
+            return Buffer.concat(buffers);
+        }
+    }
+
+    return creator;
+
+
+    function numOfPairsBuffer(format: Formats, numByteLength: number): Buffer {
+        let numOfPairs = Buffer.allocUnsafe(numByteLength);
+
+        if(format === Formats.map_16)
+            numOfPairs.writeUInt16BE(map.size);
+        else
+            if(format === Formats.map_32)
+                numOfPairs.writeUInt32BE(map.size);
+
+        return numOfPairs;
+    }
+}
 
 
 
 export {
     formatedStrBufferCreator,
     formatedNumberBufferCreator,
-    formatedArrayBufferCreator
+    formatedArrayBufferCreator,
+    formatedMapBufferCreator
 }
