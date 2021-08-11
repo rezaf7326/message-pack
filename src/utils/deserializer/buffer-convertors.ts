@@ -141,9 +141,7 @@ stringConvertor.set(Formats.str_32, {
 
 
 
-
-
-function getNextElementLength(buff: Buffer): number {
+function getBufferFirstElementLength(buff: Buffer): number {
     const dataLength = {
         [Formats.nil]: 1,
         [Formats.bool_true]: 1,
@@ -193,12 +191,13 @@ function getNextElementLength(buff: Buffer): number {
 }
 
 
+
 function extractArray(buff: Buffer, nOfElements: number, offset: number = 1): any [] {
     let elements = [];
     let start = offset;
     while(nOfElements-- > 0) {
         let deserializer = new Deserializer();
-        let next = start + getNextElementLength(buff.subarray(start));;
+        let next = start + getBufferFirstElementLength(buff.subarray(start));;
         let element = buff.subarray(start, next);
         
         deserializer.deserialize(element);
@@ -232,7 +231,7 @@ arrayConvertor.set(Formats.array_16, {
 
 arrayConvertor.set(Formats.array_32, {
         convert: function(buff: Buffer) {
-            let nOfElements = buff.readUInt32BE(1);;
+            let nOfElements = buff.readUInt32BE(1);
             let start = 5; // the first byte of the 'data'
             
             return extractArray(buff, nOfElements, start);
@@ -242,9 +241,63 @@ arrayConvertor.set(Formats.array_32, {
 
 
 
+function extractMap(buff:Buffer, nOfPairs: number, offset: number): Map<any, any> {
+    let map = new Map();
+    let keyStart = offset;
+
+    while(nOfPairs-- > 0) {
+        let keyDeserializer = new Deserializer();
+        let valDeserializer = new Deserializer();
+
+        let valueStart = keyStart + getBufferFirstElementLength(buff.subarray(keyStart));
+        let nextPair = valueStart + getBufferFirstElementLength(buff.subarray(valueStart));
+        let key = buff.subarray(keyStart, valueStart);
+        let value = buff.subarray(valueStart, nextPair);
+
+        keyDeserializer.deserialize(key);
+        valDeserializer.deserialize(value);
+        map.set(keyDeserializer.get(), valDeserializer.get());
+
+        keyStart = nextPair;
+    }
+
+    return map;
+}
+
+
+mapConvertor.set(Formats.fixmap, {
+    convert: function(buff: Buffer) {
+        let nOfPairs = buff[0] - Formats.fixmap;
+        let start = 1;
+
+        return extractMap(buff, nOfPairs, start);
+    }
+})
+
+mapConvertor.set(Formats.map_16, {
+    convert: function(buff: Buffer) {
+        let nOfPairs = buff.readUInt16BE(1);
+        let start = 3;
+
+        return extractMap(buff, nOfPairs, start);
+    }
+})
+
+mapConvertor.set(Formats.map_32, {
+    convert: function(buff: Buffer) {
+        let nOfPairs = buff.readUInt32BE(1);
+        let start = 5;
+
+        return extractMap(buff, nOfPairs, start);
+    }
+})
+
+
+
 export {
     Convertor,
     numberConvertor,
     stringConvertor,
-    arrayConvertor
+    arrayConvertor,
+    mapConvertor
 }

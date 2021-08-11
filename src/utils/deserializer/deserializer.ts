@@ -1,45 +1,73 @@
-import { Formats, isFixedArray, isFixedStr, isNegFixedInt, isPosFixedInt } from "../data-interface/formats";
+import { 
+    Formats, isFixedArray, isFixedMap, isFixedStr, isNegFixedInt, isPosFixedInt 
+} from "../data-interface/formats";
 import {
     SupportedTypes,
     type_array_formats,
     type_bool_formats,
+    type_map_formats,
     type_null_formats,
     type_number_formats,
     type_str_formats,
 } from "../data-interface/types";
-import { arrayConvertor, Convertor, numberConvertor, stringConvertor } from "./buffer-convertors";
+import { 
+    arrayConvertor, 
+    Convertor, 
+    mapConvertor, 
+    numberConvertor, 
+    stringConvertor 
+} from "./buffer-convertors";
+
+
+function isString(format: Formats): boolean {
+    return type_str_formats.includes(format) || isFixedStr(format);
+}
+
+function isBool(format: Formats): boolean {
+    return type_bool_formats.includes(format);
+}
+
+function isNull(format: Formats): boolean {
+    return type_null_formats.includes(format)
+}
+
+function isNumber(format: Formats): boolean {
+    return type_number_formats.includes(format) || isPosFixedInt(format) || isNegFixedInt(format);
+}
+
+function isArray(format: Formats): boolean {
+    return type_array_formats.includes(format) || isFixedArray(format);
+}
+
+function isMap(format: Formats): boolean {
+    return type_map_formats.includes(format) || isFixedMap(format);
+}
 
 
 class Deserializer {
     private output: SupportedTypes;
 
-
     deserialize(buff: Buffer): void {
         const format = buff[0];
 
         switch(true) {
-            case type_str_formats.includes(format)
-                    || isFixedStr(format):
+            case isString(format):
                 this.deserToStr(buff);
                 break;
-
-            case type_bool_formats.includes(format):
+            case isBool(format):
                 this.deserToBool(buff);
                 break;
-
-            case type_null_formats.includes(format):
+            case isNull(format):
                 this.set(null);
                 break;
-
-            case type_number_formats.includes(format) 
-                    || isPosFixedInt(format)
-                    || isNegFixedInt(format):
+            case isNumber(format):
                 this.deserNumber(buff);
                 break;
-
-            case type_array_formats.includes(format)
-                    || isFixedArray(format):
+            case isArray(format):
                 this.deserArray(buff);
+                break;
+            case isMap(format):
+                this.deserMap(buff);
         }
     }
 
@@ -84,7 +112,7 @@ class Deserializer {
     }
 
 
-    // deserialization of *Array-of-Arrays* is NOT supported
+    // deserialization of *Array-of-Maps* or *Array-of-Arrays* is NOT supported yet
     private deserArray(buff: Buffer): void {
         let format = buff[0];
         let convertor: Convertor;
@@ -92,6 +120,19 @@ class Deserializer {
         isFixedArray(format) ? 
             convertor = arrayConvertor.get(Formats.fixarray) :
             convertor = arrayConvertor.get(format);
+        
+        this.set(convertor.convert(buff));
+    }
+
+
+    // deserialization of *Map-of-Arrays* or *Map-of-Maps* is NOT supported yet
+    private deserMap(buff: Buffer): void {
+        let format = buff[0];
+        let convertor: Convertor;
+        
+        isFixedMap(format) ? 
+            convertor = mapConvertor.get(Formats.fixmap) :
+            convertor = mapConvertor.get(format);
         
         this.set(convertor.convert(buff));
     }
