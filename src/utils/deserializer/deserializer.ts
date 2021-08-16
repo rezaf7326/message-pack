@@ -11,12 +11,13 @@ import {
     type_str_formats,
 } from "../data-interface/types";
 import { 
-    arrayConvertor, 
-    Convertor, 
-    mapConvertor, 
+    ConvertorType, 
     numberConvertor, 
-    stringConvertor 
+    stringConvertor ,
+    arrayConvertor, 
+    mapConvertor
 } from "./buffer-convertors";
+
 
 
 function isString(format: Formats): boolean {
@@ -83,7 +84,7 @@ class Deserializer {
 
 
     private deserToStr(buff: Buffer): void {
-        let convertor: Convertor;
+        let convertor: ConvertorType;
 
         isFixedStr(buff[0]) ?
             convertor = stringConvertor.get(Formats.fixstr) :
@@ -100,7 +101,7 @@ class Deserializer {
 
     private deserNumber(buff: Buffer): void {
         let format = buff[0];
-        let convertor: Convertor;
+        let convertor: ConvertorType;
 
         isPosFixedInt(format) ? 
             convertor = numberConvertor.get(Formats.positive_fixint) :
@@ -115,7 +116,7 @@ class Deserializer {
     // deserialization of *Array-of-Maps* or *Array-of-Arrays* is NOT supported yet
     private deserArray(buff: Buffer): void {
         let format = buff[0];
-        let convertor: Convertor;
+        let convertor: ConvertorType;
         
         isFixedArray(format) ? 
             convertor = arrayConvertor.get(Formats.fixarray) :
@@ -128,7 +129,7 @@ class Deserializer {
     // deserialization of *Map-of-Arrays* or *Map-of-Maps* is NOT supported yet
     private deserMap(buff: Buffer): void {
         let format = buff[0];
-        let convertor: Convertor;
+        let convertor: ConvertorType;
         
         isFixedMap(format) ? 
             convertor = mapConvertor.get(Formats.fixmap) :

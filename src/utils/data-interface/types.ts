@@ -1,12 +1,12 @@
 import { Formats } from "./formats";
 const { 
-    fixstr, str_8, str_16, str_32,
+    str_8, str_16, str_32,
     bool_false, bool_true,
-    positive_fixint, negative_fixint, uint_8, uint_16, uint_32, uint_64,
+    uint_8, uint_16, uint_32, uint_64,
     int_8, int_16, int_32, int_64, float_32, float_64, 
     nil,
-    array_16, array_32, fixarray,
-    fixmap, map_16, map_32,
+    array_16, array_32, 
+    map_16, map_32,
 } = Formats;
 
 
